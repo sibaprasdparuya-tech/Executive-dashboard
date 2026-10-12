@@ -1,0 +1,115 @@
+@model AcxiomCRM.Models.FollowUp
+@{
+    ViewData["Title"] = "Edit Follow-Up";
+    var customers = ViewBag.Customers as SelectList;
+    var leads = ViewBag.Leads as SelectList;
+    var opps = ViewBag.Opportunities as SelectList;
+    var users = ViewBag.Users as SelectList;
+    var types = ViewBag.Types as SelectList;
+    var statuses = ViewBag.Statuses as SelectList;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">Edit Follow-Up</h3>
+                <p class="text-muted small mb-0">Update follow-up date, status, or details</p>
+            </div>
+            <a asp-action="Details" asp-route-id="@Model.FollowUpId" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Details
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form asp-action="Edit" asp-route-id="@Model.FollowUpId" method="post" id="followUpForm" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="FollowUpId" />
+                    <input type="hidden" asp-for="CreatedDate" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Subject" class="form-label fw-semibold small">Subject / Purpose <span class="text-danger">*</span></label>
+                        <input asp-for="Subject" class="form-control" required maxlength="200" />
+                        <span asp-validation-for="Subject" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FollowUpDate" class="form-label fw-semibold small">Follow-Up Date <span class="text-danger">*</span></label>
+                            <input asp-for="FollowUpDate" type="date" class="form-control" required />
+                            <span asp-validation-for="FollowUpDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="FollowUpType" class="form-label fw-semibold small">Activity Type <span class="text-danger">*</span></label>
+                            <select asp-for="FollowUpType" asp-items="types" class="form-select">
+                            </select>
+                            <span asp-validation-for="FollowUpType" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="CustomerId" class="form-label fw-semibold small">Related Customer</label>
+                            <select asp-for="CustomerId" asp-items="customers" class="form-select">
+                                <option value="">-- None / General --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="LeadId" class="form-label fw-semibold small">Related Lead</label>
+                            <select asp-for="LeadId" asp-items="leads" class="form-select">
+                                <option value="">-- None / General --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="OpportunityId" class="form-label fw-semibold small">Related Opportunity</label>
+                            <select asp-for="OpportunityId" asp-items="opps" class="form-select">
+                                <option value="">-- None / General --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Status" class="form-label fw-semibold small">Status</label>
+                            <select asp-for="Status" asp-items="statuses" class="form-select">
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
+
+                        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                        {
+                            <div class="col-md-6">
+                                <label asp-for="AssignedTo" class="form-label fw-semibold small">Assigned User</label>
+                                <select asp-for="AssignedTo" asp-items="users" class="form-select">
+                                </select>
+                            </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" asp-for="AssignedTo" />
+                        }
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Remarks" class="form-label fw-semibold small">Agenda & Remarks</label>
+                        <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a asp-action="Details" asp-route-id="@Model.FollowUpId" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

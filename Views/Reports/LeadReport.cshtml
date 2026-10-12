@@ -1,0 +1,99 @@
+@model IEnumerable<AcxiomCRM.Models.Lead>
+@{
+    ViewData["Title"] = "Lead Report";
+    var source = ViewData["Source"]?.ToString();
+    var status = ViewData["Status"]?.ToString();
+    var fromDate = ViewData["FromDate"]?.ToString();
+    var toDate = ViewData["ToDate"]?.ToString();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-0">Lead Generation Report</h2>
+        <p class="text-muted small mb-0">Prospect acquisition channels, qualification rates, and lead pipeline value</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="LeadReport" asp-route-source="@source" asp-route-status="@status" asp-route-fromDate="@fromDate" asp-route-toDate="@toDate" asp-route-export="csv" class="btn btn-outline-secondary btn-sm shadow-sm">
+            <i class="bi bi-file-earmark-arrow-down me-1"></i> Export to CSV
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Hub
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" asp-action="LeadReport" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <select name="source" class="form-select form-select-sm">
+                    <option value="">All Sources</option>
+                    @foreach (var src in AcxiomCRM.Models.LeadSources.All)
+                    {
+                        <option value="@src" selected="@(source == src)">@src</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    @foreach (var st in AcxiomCRM.Models.LeadStatuses.All)
+                    {
+                        <option value="@st" selected="@(status == st)">@st</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-1 align-items-center">
+                <input type="date" name="fromDate" value="@fromDate" class="form-control form-control-sm" placeholder="From" />
+                <span class="small text-muted">-</span>
+                <input type="date" name="toDate" value="@toDate" class="form-control form-control-sm" placeholder="To" />
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1">Filter</button>
+                <a asp-action="LeadReport" class="btn btn-outline-secondary btn-sm">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Total Records: @Model.Count() | Pipeline Value: $@Model.Sum(l => l.ExpectedValue).ToString("N2")</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Lead Name</th>
+                        <th>Company</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Est. Value ($)</th>
+                        <th>Assigned To</th>
+                        <th>Created Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model)
+                    {
+                        <tr>
+                            <td><span class="badge bg-light text-dark font-monospace border">@l.LeadCode</span></td>
+                            <td class="fw-semibold">@l.LeadName</td>
+                            <td>@(l.CompanyName ?? "-")</td>
+                            <td><span class="badge bg-light text-secondary border">@l.Source</span></td>
+                            <td><span class="badge bg-primary-subtle text-primary">@l.Status</span></td>
+                            <td>@l.Priority</td>
+                            <td class="fw-bold">$@l.ExpectedValue.ToString("N2")</td>
+                            <td>@(l.AssignedUser?.FullName ?? "Unassigned")</td>
+                            <td class="small text-muted">@l.CreatedDate.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

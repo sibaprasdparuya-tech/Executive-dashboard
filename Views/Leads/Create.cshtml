@@ -1,0 +1,128 @@
+@model AcxiomCRM.Models.Lead
+@{
+    ViewData["Title"] = "Capture New Lead";
+    var users = ViewBag.Users as IEnumerable<AcxiomCRM.Models.ApplicationUser> ?? Enumerable.Empty<AcxiomCRM.Models.ApplicationUser>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">Capture New Lead</h3>
+                <p class="text-muted small mb-0">Record new prospective client or inbound inquiry</p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="LeadName" class="form-label fw-semibold small">Lead Name <span class="text-danger">*</span></label>
+                            <input asp-for="LeadName" class="form-control" placeholder="e.g. Wayne Enterprises" required maxlength="100" />
+                            <span asp-validation-for="LeadName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CompanyName" class="form-label fw-semibold small">Company Name</label>
+                            <input asp-for="CompanyName" class="form-control" placeholder="e.g. Wayne Corp" maxlength="150" />
+                            <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="lead@company.com" required maxlength="150" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label fw-semibold small">Phone Number <span class="text-danger">*</span></label>
+                            <input asp-for="Phone" class="form-control" placeholder="+1-555-0188" required maxlength="20" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="Source" class="form-label fw-semibold small">Lead Source <span class="text-danger">*</span></label>
+                            <select asp-for="Source" class="form-select">
+                                @foreach (var src in AcxiomCRM.Models.LeadSources.All)
+                                {
+                                    <option value="@src">@src</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Source" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Status" class="form-label fw-semibold small">Status <span class="text-danger">*</span></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="New">New</option>
+                                <option value="Contacted">Contacted</option>
+                                <option value="Qualified">Qualified</option>
+                                <option value="Unqualified">Unqualified</option>
+                                <option value="Lost">Lost</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Priority" class="form-label fw-semibold small">Priority</label>
+                            <select asp-for="Priority" class="form-select">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                            <span asp-validation-for="Priority" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ExpectedValue" class="form-label fw-semibold small">Expected Value ($)</label>
+                            <input asp-for="ExpectedValue" type="number" step="0.01" min="0" class="form-control" />
+                            <span asp-validation-for="ExpectedValue" class="text-danger small"></span>
+                        </div>
+
+                        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                        {
+                            <div class="col-md-6">
+                                <label asp-for="AssignedTo" class="form-label fw-semibold small">Assign To Sales Executive</label>
+                                <select asp-for="AssignedTo" class="form-select">
+                                    @foreach (var u in users)
+                                    {
+                                        <option value="@u.Id">@u.FullName (@u.Email)</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="AssignedTo" class="text-danger small"></span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label fw-semibold small">Qualification & Discovery Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Enter notes about requirement, budget, timeline..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-save me-1"></i> Save Lead
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

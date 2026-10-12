@@ -1,0 +1,78 @@
+@using Microsoft.AspNetCore.Identity
+@using AcxiomCRM.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav align-items-center">
+@if (SignInManager.IsSignedIn(User))
+{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var roles = currentUser != null ? await UserManager.GetRolesAsync(currentUser) : new List<string>();
+    var userRole = roles.FirstOrDefault() ?? "User";
+
+    <li class="nav-item dropdown me-2">
+        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="avatar-circle">@((currentUser?.FullName ?? User.Identity?.Name ?? "U").Substring(0, 1).ToUpper())</span>
+            <div class="d-none d-md-block text-start">
+                <div class="fw-semibold lh-1">@(currentUser?.FullName ?? User.Identity?.Name)</div>
+                <small class="badge bg-primary-subtle text-primary border border-primary-subtle mt-1">@userRole</small>
+            </div>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+            <li class="dropdown-header">
+                <strong>@(currentUser?.Email)</strong>
+                <div class="text-muted small">Role: @userRole</div>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+            </li>
+            @if (User.IsInRole(UserRoles.Admin))
+            {
+                <li>
+                    <a class="dropdown-item" asp-controller="Users" asp-action="Index">
+                        <i class="bi bi-people-fill me-2"></i>User & Role Management
+                    </a>
+                </li>
+            }
+            @if (User.IsInRole(UserRoles.Admin) || User.IsInRole(UserRoles.Manager))
+            {
+                <li>
+                    <a class="dropdown-item" asp-controller="Audit" asp-action="Index">
+                        <i class="bi bi-shield-check me-2"></i>Audit Logs
+                    </a>
+                </li>
+            }
+            <li>
+                <a class="dropdown-item" href="/swagger" target="_blank">
+                    <i class="bi bi-code-square me-2"></i>REST API Docs (Swagger)
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form class="d-inline" asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="dropdown-item text-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Account" asp-action="Login">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Login
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="btn btn-outline-primary btn-sm ms-2" asp-controller="Account" asp-action="Register">
+            <i class="bi bi-person-plus me-1"></i>Register
+        </a>
+    </li>
+}
+</ul>

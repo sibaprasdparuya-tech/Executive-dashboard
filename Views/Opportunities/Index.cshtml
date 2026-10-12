@@ -1,0 +1,225 @@
+@model IEnumerable<AcxiomCRM.Models.Opportunity>
+@{
+    ViewData["Title"] = "Opportunity Pipeline";
+    var currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    var totalPages = (int)(ViewData["TotalPages"] ?? 1);
+    var totalCount = (int)(ViewData["TotalCount"] ?? 0);
+    var searchTerm = ViewData["SearchTerm"]?.ToString();
+    var stageFilter = ViewData["Stage"]?.ToString();
+    var statusFilter = ViewData["Status"]?.ToString();
+    var totalAmount = (decimal)(ViewData["TotalAmount"] ?? 0m);
+    var weightedAmount = (decimal)(ViewData["WeightedAmount"] ?? 0m);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-0">Sales Opportunities</h2>
+        <p class="text-muted small mb-0">Track revenue pipeline, stage transitions, and weighted probability</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> New Opportunity
+        </a>
+    </div>
+</div>
+
+<!-- Pipeline Highlights Banner (Section 4.8) -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm bg-primary text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-white-50 small text-uppercase fw-semibold">Open Pipeline Value</div>
+                    <h3 class="fw-bold mb-0">$@totalAmount.ToString("N2")</h3>
+                </div>
+                <i class="bi bi-cash-stack fs-1 text-white-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm bg-success text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-white-50 small text-uppercase fw-semibold">Weighted Pipeline (Expected Return)</div>
+                    <h3 class="fw-bold mb-0">$@weightedAmount.ToString("N2")</h3>
+                </div>
+                <i class="bi bi-graph-up-arrow fs-1 text-white-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filters (Section 17.13) -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="searchTerm" value="@searchTerm" class="form-control" placeholder="Search by deal name or customer..." />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="stage" class="form-select">
+                    <option value="">All Stages</option>
+                    @foreach (var stg in AcxiomCRM.Models.OpportunityStages.All)
+                    {
+                        <option value="@stg" selected="@(stageFilter == stg)">@stg</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Open" selected="@(statusFilter == "Open")">Open</option>
+                    <option value="Won" selected="@(statusFilter == "Won")">Won</option>
+                    <option value="Lost" selected="@(statusFilter == "Lost")">Lost</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary flex-grow-1">Filter</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Opportunities Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Showing @Model.Count() of @totalCount Opportunities</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Opportunity Name</th>
+                            <th>Customer / Account</th>
+                            <th>Stage</th>
+                            <th>Amount ($)</th>
+                            <th>Prob (%)</th>
+                            <th>Weighted Value ($)</th>
+                            <th>Expected Close</th>
+                            <th>Owner</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var opp in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">
+                                    <a asp-action="Details" asp-route-id="@opp.OpportunityId" class="text-decoration-none text-dark">
+                                        @opp.OpportunityName
+                                    </a>
+                                </td>
+                                <td>
+                                    @if (opp.Customer != null)
+                                    {
+                                        <a asp-controller="Customers" asp-action="Details" asp-route-id="@opp.CustomerId" class="text-decoration-none small">
+                                            @opp.Customer.CustomerName
+                                        </a>
+                                    }
+                                    else if (opp.Lead != null)
+                                    {
+                                        <span class="small text-muted">Lead: @opp.Lead.LeadName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="small text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (opp.Stage == "Won")
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-trophy me-1"></i>Won</span>
+                                    }
+                                    else if (opp.Stage == "Lost")
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x me-1"></i>Lost</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">@opp.Stage</span>
+                                    }
+                                </td>
+                                <td class="fw-bold text-dark">$@opp.Amount.ToString("N2")</td>
+                                <td>@opp.Probability%</td>
+                                <td class="fw-semibold text-success">$@opp.WeightedPipeline.ToString("N2")</td>
+                                <td class="small">@opp.ExpectedCloseDate.ToString("yyyy-MM-dd")</td>
+                                <td class="small text-muted">@(opp.AssignedUser?.FullName ?? "Unassigned")</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@opp.OpportunityId" class="btn btn-outline-secondary" title="Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@opp.OpportunityId" class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteOppModal-@opp.OpportunityId" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade text-start" id="deleteOppModal-@opp.OpportunityId" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Opportunity</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete opportunity <strong>@opp.OpportunityName</strong> ($@opp.Amount.ToString("N2"))?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                    <form asp-action="Delete" asp-route-id="@opp.OpportunityId" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="small text-muted">Page @currentPage of @totalPages</span>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)">Previous</a>
+                        </li>
+                        @for (int p = 1; p <= totalPages; p++)
+                        {
+                            <li class="page-item @(p == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@p">@p</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-graph-up-arrow fs-1 text-muted"></i>
+                <h5 class="mt-3 text-muted">No opportunities found</h5>
+                <a asp-action="Create" class="btn btn-primary btn-sm">Create Opportunity</a>
+            </div>
+        }
+    </div>
+</div>

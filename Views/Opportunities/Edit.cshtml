@@ -1,0 +1,149 @@
+@model AcxiomCRM.Models.Opportunity
+@{
+    ViewData["Title"] = "Edit Opportunity";
+    var customers = ViewBag.Customers as SelectList;
+    var leads = ViewBag.Leads as SelectList;
+    var users = ViewBag.Users as SelectList;
+    var stages = ViewBag.Stages as SelectList;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">Edit Opportunity: @Model.OpportunityName</h3>
+                <p class="text-muted small mb-0">Update deal status, value, probability, or stage</p>
+            </div>
+            <a asp-action="Details" asp-route-id="@Model.OpportunityId" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Details
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form asp-action="Edit" asp-route-id="@Model.OpportunityId" method="post" id="opportunityForm" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="OpportunityId" />
+                    <input type="hidden" asp-for="CreatedDate" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="OpportunityName" class="form-label fw-semibold small">Opportunity Name <span class="text-danger">*</span></label>
+                        <input asp-for="OpportunityName" class="form-control" required maxlength="150" />
+                        <span asp-validation-for="OpportunityName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CustomerId" class="form-label fw-semibold small">Associated Customer</label>
+                            <select asp-for="CustomerId" asp-items="customers" class="form-select">
+                                <option value="">-- Select Customer (Optional) --</option>
+                            </select>
+                            <span asp-validation-for="CustomerId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LeadId" class="form-label fw-semibold small">Originating Lead</label>
+                            <select asp-for="LeadId" asp-items="leads" class="form-select">
+                                <option value="">-- Select Lead (Optional) --</option>
+                            </select>
+                            <span asp-validation-for="LeadId" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="Amount" class="form-label fw-semibold small">Amount ($) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Amount" id="oppAmount" type="number" step="0.01" min="0.01" class="form-control" required />
+                            </div>
+                            <span asp-validation-for="Amount" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Probability" class="form-label fw-semibold small">Win Probability (0-100%) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input asp-for="Probability" id="oppProbability" type="number" min="0" max="100" class="form-control" required />
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <span asp-validation-for="Probability" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small text-muted">Weighted Return</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="text" id="weightedReturnPreview" class="form-control bg-light fw-bold text-success" readonly value="@Model.WeightedPipeline.ToString("N2")" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="Stage" class="form-label fw-semibold small">Pipeline Stage <span class="text-danger">*</span></label>
+                            <select asp-for="Stage" asp-items="stages" class="form-select">
+                            </select>
+                            <span asp-validation-for="Stage" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ExpectedCloseDate" class="form-label fw-semibold small">Expected Close Date <span class="text-danger">*</span></label>
+                            <input asp-for="ExpectedCloseDate" id="oppCloseDate" type="date" class="form-control" required />
+                            <span asp-validation-for="ExpectedCloseDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Status" class="form-label fw-semibold small">Status</label>
+                            <select asp-for="Status" class="form-select" id="oppStatus">
+                                <option value="Open">Open</option>
+                                <option value="Won">Won</option>
+                                <option value="Lost">Lost</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    {
+                        <div class="mb-3">
+                            <label asp-for="AssignedTo" class="form-label fw-semibold small">Opportunity Owner</label>
+                            <select asp-for="AssignedTo" asp-items="users" class="form-select">
+                            </select>
+                            <span asp-validation-for="AssignedTo" class="text-danger small"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" asp-for="AssignedTo" />
+                    }
+
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label fw-semibold small">Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a asp-action="Details" asp-route-id="@Model.OpportunityId" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            function updateWeighted() {
+                var amt = parseFloat($('#oppAmount').val()) || 0;
+                var prob = parseFloat($('#oppProbability').val()) || 0;
+                var weighted = (amt * prob) / 100.0;
+                $('#weightedReturnPreview').val(weighted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            }
+
+            $('#oppAmount, #oppProbability').on('input', updateWeighted);
+        });
+    </script>
+}

@@ -1,0 +1,275 @@
+@using AcxiomCRM.Models
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AcxiomCRM Enterprise</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom site styling -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
+    <style>
+        :root {
+            --crm-primary: #1e3a8a;
+            --crm-primary-light: #3b82f6;
+            --crm-secondary: #0f172a;
+            --crm-accent: #0ea5e9;
+            --crm-bg: #f8fafc;
+            --crm-card-border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--crm-bg);
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--crm-primary) !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-crm {
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: #475569;
+            padding: 0.5rem 0.85rem !important;
+            border-radius: 6px;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--crm-primary-light) !important;
+            background-color: #f1f5f9;
+        }
+
+        .avatar-circle {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
+            color: #ffffff;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .card {
+            border: 1px solid var(--crm-card-border);
+            border-radius: 10px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+        }
+
+        .card-header {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--crm-card-border);
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--crm-primary);
+            border-color: var(--crm-primary);
+        }
+        .btn-primary:hover {
+            background-color: #1e40af;
+            border-color: #1e40af;
+        }
+
+        .badge-status {
+            padding: 0.35em 0.65em;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+
+        .table th {
+            font-weight: 600;
+            font-size: 0.825rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #64748b;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .main-content {
+            flex: 1 0 auto;
+        }
+
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            padding: 1rem 0;
+            margin-top: auto;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-crm sticky-top">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-briefcase-fill text-primary fs-4"></i>
+                    <span>Acxiom<span class="text-primary">CRM</span></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+                        aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarMain">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
+                                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Customers" asp-action="Index">
+                                    <i class="bi bi-building me-1"></i> Customers
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Leads" asp-action="Index">
+                                    <i class="bi bi-person-lines-fill me-1"></i> Leads
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Opportunities" asp-action="Index">
+                                    <i class="bi bi-graph-up-arrow me-1"></i> Opportunities
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="FollowUps" asp-action="Index">
+                                    <i class="bi bi-calendar-check me-1"></i> Follow-Ups
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Activities" asp-action="Index">
+                                    <i class="bi bi-list-task me-1"></i> Activities
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-file-earmark-bar-graph me-1"></i> Reports
+                                </a>
+                                <ul class="dropdown-menu shadow" aria-labelledby="reportsDropdown">
+                                    <li><a class="dropdown-item" asp-controller="Reports" asp-action="Index"><i class="bi bi-grid me-2"></i>All Reports Hub</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-controller="Reports" asp-action="PipelineReport"><i class="bi bi-funnel me-2"></i>Pipeline Report</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Reports" asp-action="CustomerReport"><i class="bi bi-building me-2"></i>Customer Report</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Reports" asp-action="LeadReport"><i class="bi bi-person-lines-fill me-2"></i>Lead Report</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Reports" asp-action="OpportunityReport"><i class="bi bi-graph-up me-2"></i>Opportunity Report</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Reports" asp-action="FollowUpReport"><i class="bi bi-calendar-event me-2"></i>Follow-Up Report</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Reports" asp-action="ConversionReport"><i class="bi bi-pie-chart me-2"></i>Sales Conversion Report</a></li>
+                                    @if (User.IsInRole(UserRoles.Admin) || User.IsInRole(UserRoles.Manager))
+                                    {
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="Reports" asp-action="UserActivityReport"><i class="bi bi-activity me-2"></i>User Activity Report</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Reports" asp-action="AuditReport"><i class="bi bi-shield-check me-2"></i>Audit Report</a></li>
+                                    }
+                                </ul>
+                            </li>
+                            @if (User.IsInRole(UserRoles.Admin))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Users" asp-action="Index">
+                                        <i class="bi bi-people me-1"></i> Users & Roles
+                                    </a>
+                                </li>
+                            }
+                            @if (User.IsInRole(UserRoles.Admin) || User.IsInRole(UserRoles.Manager))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Audit" asp-action="Index">
+                                        <i class="bi bi-shield-lock me-1"></i> Audit Log
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <div class="ms-auto d-flex align-items-center">
+                        <partial name="_LoginPartial" />
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="main-content py-4">
+        <div class="container-fluid px-4">
+            <!-- Toast / Alert notifications -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @RenderBody()
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container-fluid px-4 d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <strong>AcxiomCRM</strong> &copy; 2026. Production Enterprise CRM Baseline.
+            </div>
+            <div class="d-flex gap-3">
+                <a href="/swagger" target="_blank" class="text-decoration-none text-muted">
+                    <i class="bi bi-terminal me-1"></i>Swagger REST API
+                </a>
+                <span class="text-muted">|</span>
+                <span class="text-muted">Role-Based Access Control Enabled</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js CDN for interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

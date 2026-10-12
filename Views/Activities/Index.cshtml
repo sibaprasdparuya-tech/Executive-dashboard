@@ -1,0 +1,162 @@
+@model IEnumerable<AcxiomCRM.Models.Activity>
+@{
+    ViewData["Title"] = "Activities Log";
+    var currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    var totalPages = (int)(ViewData["TotalPages"] ?? 1);
+    var totalCount = (int)(ViewData["TotalCount"] ?? 0);
+    var actType = ViewData["ActivityType"]?.ToString();
+    var status = ViewData["Status"]?.ToString();
+    var date = ViewData["Date"]?.ToString();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-0">Activity History</h2>
+        <p class="text-muted small mb-0">Log and review touchpoints (Calls, Meetings, Emails, Tasks)</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Log Activity
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filters (Section 17.13) -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select name="activityType" class="form-select">
+                    <option value="">All Activity Types</option>
+                    @foreach (var t in AcxiomCRM.Models.ActivityTypes.All)
+                    {
+                        <option value="@t" selected="@(actType == t)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Completed" selected="@(status == "Completed")">Completed</option>
+                    <option value="Pending" selected="@(status == "Pending")">Pending</option>
+                    <option value="Cancelled" selected="@(status == "Cancelled")">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="date" value="@date" class="form-control" />
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary flex-grow-1">Filter</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Activity Log Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Showing @Model.Count() of @totalCount Activities</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th>Associated Entity</th>
+                            <th>Assigned User</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var act in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (act.ActivityType == "Call")
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary border"><i class="bi bi-telephone-fill me-1"></i>Call</span>
+                                    }
+                                    else if (act.ActivityType == "Meeting")
+                                    {
+                                        <span class="badge bg-success-subtle text-success border"><i class="bi bi-people-fill me-1"></i>Meeting</span>
+                                    }
+                                    else if (act.ActivityType == "Email")
+                                    {
+                                        <span class="badge bg-info-subtle text-info border"><i class="bi bi-envelope-fill me-1"></i>Email</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border"><i class="bi bi-check2-square me-1"></i>Task</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@act.Subject</div>
+                                    @if (!string.IsNullOrWhiteSpace(act.Description))
+                                    {
+                                        <small class="text-muted text-truncate d-inline-block" style="max-width: 350px;">@act.Description</small>
+                                    }
+                                </td>
+                                <td class="small">@act.ActivityDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    @if (act.Customer != null)
+                                    {
+                                        <span class="small"><i class="bi bi-building me-1"></i>@act.Customer.CustomerName</span>
+                                    }
+                                    else if (act.Lead != null)
+                                    {
+                                        <span class="small"><i class="bi bi-person me-1"></i>@act.Lead.LeadName</span>
+                                    }
+                                    else if (act.Opportunity != null)
+                                    {
+                                        <span class="small"><i class="bi bi-graph-up me-1"></i>@act.Opportunity.OpportunityName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="small text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="small text-muted">@(act.AssignedUser?.FullName ?? "System")</td>
+                                <td><span class="badge @(act.Status == "Completed" ? "bg-success" : "bg-warning")">@act.Status</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="small text-muted">Page @currentPage of @totalPages</span>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)">Previous</a>
+                        </li>
+                        @for (int p = 1; p <= totalPages; p++)
+                        {
+                            <li class="page-item @(p == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@p">@p</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-list-task fs-1 text-muted"></i>
+                <h5 class="mt-3 text-muted">No activities found</h5>
+                <a asp-action="Create" class="btn btn-primary btn-sm">Log Activity</a>
+            </div>
+        }
+    </div>
+</div>

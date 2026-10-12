@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="p-4 bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex mb-3">
+            <i class="bi bi-shield-x fs-1"></i>
+        </div>
+        <h2 class="fw-bold text-danger">403 - Access Denied</h2>
+        <p class="text-muted fs-5">You do not have the required role permissions to access this CRM resource.</p>
+        <p class="text-muted small">If you believe this is in error, contact your system administrator to adjust your role assignments.</p>
+        <div class="mt-4">
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+</div>

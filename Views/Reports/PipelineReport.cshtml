@@ -1,0 +1,113 @@
+@model AcxiomCRM.DTOs.PipelineReportDto
+@{
+    ViewData["Title"] = "Sales Pipeline Report";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-0">Sales Pipeline Analysis</h2>
+        <p class="text-muted small mb-0">Breakdown of opportunities by sales pipeline stage and account owner</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="PipelineReport" asp-route-export="csv" class="btn btn-outline-secondary btn-sm shadow-sm">
+            <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Stage Data (CSV)
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Hub
+        </a>
+    </div>
+</div>
+
+<!-- Key Totals -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3">
+            <div class="text-muted small text-uppercase fw-semibold">Total Deals</div>
+            <h3 class="fw-bold text-dark mb-0">@Model.TotalOpportunitiesCount</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3">
+            <div class="text-muted small text-uppercase fw-semibold">Open Pipeline Gross Value</div>
+            <h3 class="fw-bold text-primary mb-0">$@Model.TotalPipelineValue.ToString("N2")</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3">
+            <div class="text-muted small text-uppercase fw-semibold">Expected Weighted Return</div>
+            <h3 class="fw-bold text-success mb-0">$@Model.TotalWeightedPipelineValue.ToString("N2")</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Stage Breakdown Table -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-semibold">
+                <i class="bi bi-funnel-fill text-primary me-2"></i>Stage-Wise Pipeline Breakdown
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th>Deals</th>
+                                <th>Gross Amount ($)</th>
+                                <th>Weighted Value ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.ByStage)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">
+                                        <span class="badge bg-light text-dark border">@s.Stage</span>
+                                    </td>
+                                    <td>@s.Count</td>
+                                    <td class="fw-bold">$@s.TotalAmount.ToString("N2")</td>
+                                    <td class="fw-bold text-success">$@s.WeightedAmount.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Owner Breakdown Table -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-semibold">
+                <i class="bi bi-people-fill text-success me-2"></i>Owner-Wise Pipeline Distribution
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Account Owner</th>
+                                <th>Deals</th>
+                                <th>Gross Amount ($)</th>
+                                <th>Weighted Value ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var o in Model.ByOwner)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@o.OwnerName</td>
+                                    <td>@o.Count</td>
+                                    <td class="fw-bold">$@o.TotalAmount.ToString("N2")</td>
+                                    <td class="fw-bold text-success">$@o.WeightedAmount.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

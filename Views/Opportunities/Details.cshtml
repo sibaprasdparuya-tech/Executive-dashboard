@@ -1,0 +1,163 @@
+@model AcxiomCRM.Models.Opportunity
+@{
+    ViewData["Title"] = $"Opportunity: {Model.OpportunityName}";
+    var stages = AcxiomCRM.Models.OpportunityStages.All;
+    var currentStageIdx = Array.IndexOf(stages, Model.Stage);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h2 class="fw-bold mb-0">@Model.OpportunityName</h2>
+            <span class="badge @(Model.Status == "Won" ? "bg-success-subtle text-success" : (Model.Status == "Lost" ? "bg-danger-subtle text-danger" : "bg-primary-subtle text-primary")) border">
+                @Model.Status - @Model.Stage
+            </span>
+        </div>
+        <p class="text-muted small mb-0">Sales Deal Details & Pipeline Progression</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.OpportunityId" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i> Edit Deal
+        </a>
+        <a asp-controller="FollowUps" asp-action="Create" asp-route-opportunityId="@Model.OpportunityId" class="btn btn-primary btn-sm">
+            <i class="bi bi-calendar-plus me-1"></i> + Schedule Follow-Up
+        </a>
+    </div>
+</div>
+
+<!-- Pipeline Stage Progress Bar (Section 8 Core Workflows) -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <div class="d-flex justify-content-between text-center position-relative">
+            @for (int i = 0; i < stages.Length; i++)
+            {
+                var stg = stages[i];
+                var isCompleted = i <= currentStageIdx && Model.Stage != "Lost";
+                var isCurrent = stg == Model.Stage;
+                var isLost = Model.Stage == "Lost" && stg == "Lost";
+
+                <div class="flex-grow-1 position-relative">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle @(isLost ? "bg-danger text-white" : (isCurrent ? "bg-primary text-white shadow" : (isCompleted ? "bg-success text-white" : "bg-light text-muted border")))" style="width: 34px; height: 34px; font-weight: 600;">
+                        @(i + 1)
+                    </div>
+                    <div class="small mt-1 @(isCurrent ? "fw-bold text-primary" : "text-muted")">@stg</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Deal Economics Card -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-transparent fw-semibold">
+                <i class="bi bi-currency-dollar me-1 text-success"></i> Deal Financials
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="text-muted small">Total Deal Amount</div>
+                        <h4 class="fw-bold text-dark mb-0">$@Model.Amount.ToString("N2")</h4>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted small">Win Probability</div>
+                        <h4 class="fw-bold text-primary mb-0">@Model.Probability%</h4>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-light rounded mb-3 border">
+                    <div class="text-muted small">Weighted Pipeline Return</div>
+                    <h3 class="fw-bold text-success mb-0">$@Model.WeightedPipeline.ToString("N2")</h3>
+                    <small class="text-muted">Formula: Amount × Probability / 100</small>
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-muted small">Expected Close Date</div>
+                    <div class="fw-semibold">@Model.ExpectedCloseDate.ToString("MMMM dd, yyyy")</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-muted small">Deal Owner</div>
+                    <div class="fw-semibold">@(Model.AssignedUser?.FullName ?? Model.AssignedUser?.UserName ?? "Unassigned")</div>
+                </div>
+
+                @if (Model.Customer != null)
+                {
+                    <div class="mb-3">
+                        <div class="text-muted small">Customer Account</div>
+                        <div>
+                            <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="fw-semibold text-decoration-none">
+                                <i class="bi bi-building me-1"></i>@Model.Customer.CustomerName
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Lead != null)
+                {
+                    <div class="mb-3">
+                        <div class="text-muted small">Originating Lead</div>
+                        <div>
+                            <a asp-controller="Leads" asp-action="Details" asp-route-id="@Model.LeadId" class="fw-semibold text-decoration-none">
+                                <i class="bi bi-person me-1"></i>@Model.Lead.LeadName
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                {
+                    <div class="mb-2">
+                        <div class="text-muted small">Deal Notes</div>
+                        <div class="small p-2 bg-light rounded">@Model.Notes</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Related Follow-ups -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-calendar-event me-1 text-primary"></i> Opportunity Follow-Ups (@Model.FollowUps.Count)</span>
+                <a asp-controller="FollowUps" asp-action="Create" asp-route-opportunityId="@Model.OpportunityId" class="btn btn-outline-primary btn-sm py-0">+ Follow-Up</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.FollowUps.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Subject</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var f in Model.FollowUps)
+                                {
+                                    <tr>
+                                        <td class="small">@f.FollowUpDate.ToString("yyyy-MM-dd")</td>
+                                        <td class="fw-semibold">@f.Subject</td>
+                                        <td><span class="badge bg-secondary-subtle text-secondary">@f.FollowUpType</span></td>
+                                        <td><span class="badge @(f.Status == "Completed" ? "bg-success" : "bg-warning")">@f.Status</span></td>
+                                        <td><a asp-controller="FollowUps" asp-action="Details" asp-route-id="@f.FollowUpId" class="btn btn-sm btn-link p-0">View</a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-3 text-center text-muted small">No scheduled follow-ups for this opportunity.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

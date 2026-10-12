@@ -1,0 +1,188 @@
+@model IEnumerable<AcxiomCRM.Models.AuditLog>
+@{
+    ViewData["Title"] = "Security & Business Audit Logs";
+    var currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    var totalPages = (int)(ViewData["TotalPages"] ?? 1);
+    var totalCount = (int)(ViewData["TotalCount"] ?? 0);
+    var selectedUser = ViewData["UserId"]?.ToString();
+    var selectedEntity = ViewData["EntityName"]?.ToString();
+    var selectedAction = ViewData["ActionName"]?.ToString();
+    var fromDate = ViewData["FromDate"]?.ToString();
+    var toDate = ViewData["ToDate"]?.ToString();
+    var users = ViewBag.Users as IEnumerable<AcxiomCRM.Models.ApplicationUser> ?? Enumerable.Empty<AcxiomCRM.Models.ApplicationUser>();
+    var entities = ViewBag.Entities as string[] ?? Array.Empty<string>();
+    var actions = ViewBag.Actions as string[] ?? Array.Empty<string>();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-0">System & Audit Trail</h2>
+        <p class="text-muted small mb-0">Append-only immutable record of authentication, data mutations, security policies and workflow events</p>
+    </div>
+    <div>
+        <a asp-controller="Reports" asp-action="AuditReport" asp-route-export="csv" class="btn btn-outline-secondary shadow-sm btn-sm">
+            <i class="bi bi-file-earmark-arrow-down me-1"></i> Export to CSV
+        </a>
+    </div>
+</div>
+
+<!-- Audit Filters (Section 4.9 & 17.13) -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <select name="userId" class="form-select form-select-sm">
+                    <option value="">All Users</option>
+                    @foreach (var u in users)
+                    {
+                        <option value="@u.Id" selected="@(selectedUser == u.Id)">@u.FullName (@u.Email)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="entityName" class="form-select form-select-sm">
+                    <option value="">All Modules</option>
+                    @foreach (var ent in entities)
+                    {
+                        <option value="@ent" selected="@(selectedEntity == ent)">@ent</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="action" class="form-select form-select-sm">
+                    <option value="">All Actions</option>
+                    @foreach (var act in actions)
+                    {
+                        <option value="@act" selected="@(selectedAction == act)">@act</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-1 align-items-center">
+                <input type="date" name="fromDate" value="@fromDate" class="form-control form-control-sm" placeholder="From" />
+                <span class="small text-muted">-</span>
+                <input type="date" name="toDate" value="@toDate" class="form-control form-control-sm" placeholder="To" />
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1">Filter</button>
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Audit Log Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Showing @Model.Count() of @totalCount Audit Events</span>
+        <span class="badge bg-light text-muted border"><i class="bi bi-shield-check text-success me-1"></i>Tamper Evident Audit Log</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 font-monospace small">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Module</th>
+                            <th>Record ID</th>
+                            <th>Result</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td class="text-nowrap text-muted">@log.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td class="fw-semibold">@(log.UserName ?? "System")</td>
+                                <td>
+                                    @if (log.Action == "Login")
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary border">Login</span>
+                                    }
+                                    else if (log.Action == "Failed Login")
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border">Failed Login</span>
+                                    }
+                                    else if (log.Action == "Delete")
+                                    {
+                                        <span class="badge bg-danger text-white">Delete</span>
+                                    }
+                                    else if (log.Action == "Create")
+                                    {
+                                        <span class="badge bg-success-subtle text-success border">Create</span>
+                                    }
+                                    else if (log.Action == "Convert")
+                                    {
+                                        <span class="badge bg-purple-subtle text-purple border"><i class="bi bi-arrow-repeat me-1"></i>Convert</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border">@log.Action</span>
+                                    }
+                                </td>
+                                <td><span class="badge bg-light text-dark border">@log.EntityName</span></td>
+                                <td>@(log.RecordId ?? "-")</td>
+                                <td>
+                                    @if (log.Result == "Success")
+                                    {
+                                        <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Success</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-1"></i>@log.Result</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 300px;" title="@log.Details">
+                                        @log.Details
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(log.OldValue) || !string.IsNullOrWhiteSpace(log.NewValue))
+                                    {
+                                        <small class="d-block text-muted">
+                                            @if (!string.IsNullOrWhiteSpace(log.OldValue)) { <span>Old: @log.OldValue </span> }
+                                            @if (!string.IsNullOrWhiteSpace(log.NewValue)) { <span>New: @log.NewValue</span> }
+                                        </small>
+                                    }
+                                </td>
+                                <td class="text-muted">@(log.IpAddress ?? "Local")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="small text-muted">Page @currentPage of @totalPages</span>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)">Previous</a>
+                        </li>
+                        @for (int p = 1; p <= totalPages; p++)
+                        {
+                            <li class="page-item @(p == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@p">@p</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-shield-check fs-1 text-muted"></i>
+                <h5 class="mt-3 text-muted">No audit entries found</h5>
+            </div>
+        }
+    </div>
+</div>

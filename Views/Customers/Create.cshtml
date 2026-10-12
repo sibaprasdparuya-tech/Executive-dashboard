@@ -1,0 +1,145 @@
+@model AcxiomCRM.Models.Customer
+@{
+    ViewData["Title"] = "Create Customer";
+    var users = ViewBag.Users as IEnumerable<AcxiomCRM.Models.ApplicationUser> ?? Enumerable.Empty<AcxiomCRM.Models.ApplicationUser>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">Create Customer</h3>
+                <p class="text-muted small mb-0">Add a new corporate or individual client record</p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" id="customerForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CustomerName" class="form-label fw-semibold small">Customer Name <span class="text-danger">*</span></label>
+                            <input asp-for="CustomerName" class="form-control" placeholder="e.g. Acme Corporation" required maxlength="100" />
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CompanyName" class="form-label fw-semibold small">Company Name</label>
+                            <input asp-for="CompanyName" class="form-control" placeholder="e.g. Acme Global Inc." maxlength="150" />
+                            <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control" id="customerEmail" placeholder="contact@company.com" required maxlength="150" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                            <div id="emailFeedback" class="small text-danger d-none">Email is already registered for another customer.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label fw-semibold small">Phone Number <span class="text-danger">*</span></label>
+                            <input asp-for="Phone" class="form-control" id="customerPhone" placeholder="+1-555-0199 or 10-digit number" required maxlength="20" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                            <div id="phoneFeedback" class="small text-danger d-none">Phone number is already registered for another customer.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label fw-semibold small">Street Address</label>
+                        <input asp-for="Address" class="form-control" placeholder="123 Business Blvd, Suite 400" maxlength="250" />
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="City" class="form-label fw-semibold small">City</label>
+                            <input asp-for="City" class="form-control" placeholder="New York" maxlength="100" />
+                            <span asp-validation-for="City" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="State" class="form-label fw-semibold small">State / Province</label>
+                            <input asp-for="State" class="form-control" placeholder="NY" maxlength="100" />
+                            <span asp-validation-for="State" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Status" class="form-label fw-semibold small">Status</label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Active">Active</option>
+                                <option value="Prospect">Prospect</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    {
+                        <div class="mb-4">
+                            <label asp-for="CreatedBy" class="form-label fw-semibold small">Assign Relationship Owner</label>
+                            <select asp-for="CreatedBy" class="form-select">
+                                @foreach (var u in users)
+                                {
+                                    <option value="@u.Id">@u.FullName (@u.Email)</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CreatedBy" class="text-danger small"></span>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-check2-circle me-1"></i> Save Customer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Live duplicate pre-check for email
+            $('#customerEmail').on('blur', function () {
+                var email = $(this).val().trim();
+                if (email) {
+                    $.get('@Url.Action("CheckEmailAvailability", "Customers")', { email: email }, function (isAvailable) {
+                        if (!isAvailable) {
+                            $('#emailFeedback').removeClass('d-none');
+                            $('#customerEmail').addClass('is-invalid');
+                        } else {
+                            $('#emailFeedback').addClass('d-none');
+                            $('#customerEmail').removeClass('is-invalid');
+                        }
+                    });
+                }
+            });
+
+            // Live duplicate pre-check for phone
+            $('#customerPhone').on('blur', function () {
+                var phone = $(this).val().trim();
+                if (phone) {
+                    $.get('@Url.Action("CheckPhoneAvailability", "Customers")', { phone: phone }, function (isAvailable) {
+                        if (!isAvailable) {
+                            $('#phoneFeedback').removeClass('d-none');
+                            $('#customerPhone').addClass('is-invalid');
+                        } else {
+                            $('#phoneFeedback').addClass('d-none');
+                            $('#customerPhone').removeClass('is-invalid');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
