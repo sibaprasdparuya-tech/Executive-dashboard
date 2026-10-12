@@ -290,7 +290,7 @@ Potential improvements include:
 
 ## Author
 
-**Sibaprasad Paruwa**
+**Sibaprasad Paruya**
 
 *AcxiomCRM — Enterprise Customer Relationship Management Solution*
 
